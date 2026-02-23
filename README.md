@@ -1,125 +1,121 @@
-# ☁️ Nextcloud Autohost (Windows & Linux)
+# ☁️ Nextcloud Autohost
 
-Nextcloud Autohost is a lightweight Python script that automatically manages your system’s hosts file to give you the fastest possible connection to your self-hosted Nextcloud server — whether you’re at home on your LAN or away using your public domain.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-0078D4?style=for-the-badge&logo=windows" alt="Platform">
+  <img src="https://img.shields.io/badge/Nextcloud-0082C9?style=for-the-badge&logo=nextcloud&logoColor=white" alt="Nextcloud">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License">
+</p>
 
-> I originally wrote this script for my own home Nextcloud server running on a spare computer. I wanted to store my files locally but still make them accessible over the internet with my domain. The idea was simple: when I’m on my home Wi-Fi or LAN, I shouldn’t have to route traffic over the internet — I should connect directly to the local IP for speed.
->
-> While I expected the Nextcloud client itself to have a feature like this, it doesn’t. So I built **Nextcloud Autohost** as a “set-and-forget” solution. It detects whether your Nextcloud instance is reachable locally and dynamically updates your hosts file to point your domain to your LAN IP. When you’re away, it disables the local entry so your domain resolves normally.
-
----
-
-## 🛠️ Features
-
-* ### Automatic Local Detection
-
-  Periodically checks if your Nextcloud server is reachable at its local IP.
-
-* ### Smart Hosts File Updates
-
-  Adds or removes an entry for your domain in the system’s hosts file depending on availability.
-
-* ### Cross-Platform
-
-  Works on both **Windows** and **Linux**.
-
-* ### Background Service
-
-  Installs itself as a **Startup entry (Windows)** or **systemd service (Linux)** for continuous operation.
-
-* ### Self-Installing
-
-  Handles installation of required Python modules and sets up autostart automatically.
-
-* ### Safe Uninstallation
-
-  Removes autostart entries but leaves the current process alone — you can reboot or stop it manually when convenient.
+<p align="center">
+  <strong>Zero-Latency Local Routing for your Self-Hosted Cloud.</strong>
+  <br />
+  Automatically switch between LAN and WAN IPs to ensure the fastest possible connection to your Nextcloud server.
+</p>
 
 ---
 
-## 📦 Installation
+## 📖 The "Why"
 
-The script installs itself and required dependencies.
+If you host Nextcloud at home, you’ve likely faced this dilemma: 
+1. **At Home:** You want gigabit LAN speeds, but your domain points to your public IP, routing your traffic out to the internet and back (Hairpin NAT), which is often slow or unsupported by routers.
+2. **Away:** You need your domain to resolve via global DNS to access your files over the internet.
 
-Before installing, **edit the script to set your own IP and domain**:
-
-```python
-TARGET_IP = "192.168.1.2"
-DOMAIN = "yourdomain.com"
-```
-
-Run the installer:
-
-```bash
-python3 nextcloud_autohost.py --install
-```
+**Nextcloud Autohost** is a "set-and-forget" daemon that monitors your connection. When you're home, it injects a local override into your system's `hosts` file. When you leave, it cleans it up. 
 
 ---
 
-## 🖱️ Usage
+## ✨ Features
 
-Once installed, the script runs silently in the background, checking every 5 seconds whether your local Nextcloud is reachable.
-
-* When reachable → your domain (e.g., `yourdomain.com`) is pointed to your local IP (e.g., `192.168.1.2`).
-* When unreachable → the hosts entry is commented out, letting DNS resolve normally.
-
----
-
-## 🧹 Uninstallation
-
-To remove autostart entries and disable the service:
-
-```bash
-python3 nextcloud_autohost.py --uninstall
-```
-
-* On **Windows**, it deletes the Startup entry.
-* On **Linux**, it disables and removes the systemd service.
-* The running process is not killed — just reboot or stop it manually.
+*   **🔍 Intelligence Detection:** Periodically pings your local Nextcloud instance to verify reachability.
+*   **⚡ Instant Speed Boost:** Routes traffic directly over your LAN, bypassing internet bandwidth limits and router bottlenecks.
+*   **🔄 Cross-Platform Daemon:**
+    *   **Linux:** Integrates as a native `systemd` service with auto-restart logic.
+    *   **Windows:** Installs as a silent background process via the `Startup` folder.
+*   **🛠️ Zero-Dependency Setup:** Automatically installs the Python `requests` module if missing.
+*   **🧹 Non-Destructive Cleanup:** Built-in uninstaller reverts all system startup entries and systemd units.
 
 ---
 
 ## 🧬 How It Works
 
-Nextcloud Autohost is based on a few simple components:
-
-* ### Connectivity Check
-
-  Uses the Python `requests` module to send an HTTP request to your local Nextcloud server and confirm if it’s accessible.
-
-* ### Hosts File Management
-
-  Dynamically writes or comments out a line in your hosts file:
-
-  ```
-  192.168.1.2   yourdomain.com   # NextCloud Autohost
-  ```
-
-* ### Background Service
-
-  * **Windows:** Creates a `.bat` file in the Startup folder that runs the script with `pythonw`.
-  * **Linux:** Creates a systemd service unit that runs continuously and restarts automatically if it fails.
-
-* ### Self-Installing
-
-  If `requests` isn’t installed, the script installs it automatically using `pip`.
+```mermaid
+graph TD
+    A[Start Autohost Daemon] --> B{Ping Local IP?}
+    B -- Reachable --> C[Add Domain to Hosts File]
+    C --> D[Nextcloud Traffic: 100% LAN]
+    B -- Timed Out --> E[Comment out Hosts Entry]
+    E --> F[Nextcloud Traffic: Global DNS]
+    D --> G[Wait 5 Seconds]
+    F --> G
+    G --> B
+    
+    style C fill:#0082c9,stroke:#333,color:#fff
+    style E fill:#f9f,stroke:#333
+```
 
 ---
 
-## ⚠️ Notes
+## 🚀 Getting Started
 
-* Requires admin/root privileges to edit the system hosts file.
-* You should replace the `DOMAIN` and `TARGET_IP` constants in the script with your own setup before use.
-* Meant for home/self-hosted servers — not suitable for multi-user or enterprise environments.
+### 1. Pre-Configuration
+Before running the script, you **must** define your specific server details inside `nextcloud_autohost.py`:
+
+```python
+# Open the script and edit these lines:
+TARGET_IP = "192.168.1.x"    # Your server's local IP
+DOMAIN = "cloud.yourdomain.com" # Your Nextcloud domain
+```
+
+### 2. Installation
+The script requires Administrator (Windows) or Root (Linux) privileges to modify the system hosts file.
+
+```bash
+# Run the auto-installer
+python3 nextcloud_autohost.py --install
+```
+
+### 3. Verification
+*   **Linux:** Check service status with `systemctl status nextcloud_autohost.service`.
+*   **Windows:** Look for the python process in Task Manager or check your `shell:startup` folder.
 
 ---
 
+## 🛠️ Technical Breakdown
+
+| Component | Linux Implementation | Windows Implementation |
+| :--- | :--- | :--- |
+| **Persistence** | `systemd` Unit File | `.bat` in `AppData\Roaming\...\Startup` |
+| **Execution** | Background Service | `pythonw.exe` (No console window) |
+| **Hosts Path** | `/etc/hosts` | `C:\Windows\System32\drivers\etc\hosts` |
+| **Privileges** | Requires `sudo` | Requires "Run as Administrator" |
+
+---
+
+## 🧹 Uninstallation
+
+To stop the background monitoring and remove all autostart entries:
+
+```bash
+python3 nextcloud_autohost.py --uninstall
+```
+*Note: This removes the service/startup link. To stop the current running process immediately, a system reboot or manual task kill is recommended.*
+
+---
+
+## ⚠️ Important Notes
+
+*   **Static IP Recommended:** Ensure your Nextcloud server has a static local IP, or the script will lose track of it.
+*   **VPN Warning:** If you use a VPN that routes all traffic, it may interfere with the local ping detection.
+*   **Self-Hosting Only:** This tool is designed for private home servers, not for public-facing enterprise environments.
+
+---
 
 ## 📜 License
 
-This project is licensed under the MIT License — feel free to use, modify, and distribute it as you like.
+Distributed under the **MIT License**. See `LICENSE` for more information.
 
 ---
-
-## 🤝 Acknowledgements
-
-[Nextcloud](https://github.com/nextcloud) — for creating the powerful self-hosted cloud platform that inspired this little helper script to make using it at home even smoother.
+<p align="center">
+  Optimizing the self-hosted experience. 🚀
+</p>
